@@ -5,9 +5,9 @@ var numCPUs = require('os').cpus().length;
 var domain = require('domain');
 var express = require('express');
 var app = express();
-
-
+var formidable = require('formidable');
 var winston = require('winston');
+app.set('view engine', 'ejs');
 
 var logger = new (winston.Logger)({  
     transports: [
@@ -15,6 +15,12 @@ var logger = new (winston.Logger)({
         new (winston.transports.File)({ filename: __dirname + 'reggie_node.log', level: 'info' })
     ]
 });
+
+var form = "<!DOCTYPE HTML><html><body>" +
+"<form method='post' action='/upload' enctype='multipart/form-data'>" +
+"<input type='file' name='image'/>" +
+"<input type='submit' /></form>" +
+"</body></html>";
 
 
  var options = {
@@ -37,23 +43,51 @@ if (cluster.isMaster) {
 	
 	httpsServer.listen(3000);
 
-	app.get('/', function(req, res){
+	app.get('/', function(req, response){
 
 	 logger.info('Inside Get')
 
-	  var d = domain.create(); 
+	  /*var d = domain.create(); 
 	  
 	  d.on('error',function(err){		
 			response.writeHead(404, {'Content-Type': 'text/plain'});
 			response.end('Page Not Found');
 	  });	  
-	  d.run(function() {
-	    handleRequest(req, res);		
-      });  
+	  d.run(function(req, res) {
+	    handleRequest(req, res);
+      });  */
+	  handleRequest(req, response);
 	});	
+	
+	app.post('/upload', function(req, response) {        	
+		fileUpload(req, response);
+	});	
+	
+	app.get('/getFile', function(req, response) {        	
+		fileDownload(req, response);
+	});	
+	
 }
 
-function handleRequest(req, res){
-  res.writeHead(200);
-  res.end("hello world\n"); 
+function handleRequest(req, response){
+    response.writeHead(200, {'Content-Type': 'text/html'});
+  	response.end(form);
+};
+
+function fileUpload(request, response){
+    logger.info('File Upload Starts');
+    var destinationFile = fs.createWriteStream("destination.txt");
+    request.pipe(destinationFile);
+    response.writeHead(200, {'Content-Type': 'text/html'});
+  	response.end("File Uploaded");
+	logger.info('File Upload Ends');
+};
+
+function fileDownload(request, response){   
+   // var readStream = fs.createReadStream("destination.txt");
+	//response.writeHead(200, {'Content-Type': 'text/txt'});
+	//readStream.pipe(response);
+    logger.info('File Download Starts');
+	response.sendfile("destination.txt");
+	logger.info('File Download Ends');
 };
