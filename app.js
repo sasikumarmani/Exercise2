@@ -76,7 +76,7 @@ function handleRequest(req, response){
 
 function fileUpload(request, response){
     logger.info('File Upload Starts');
-    var destinationFile = fs.createWriteStream("destination.txt");
+    var destinationFile = fs.createWriteStream("destination.pdf");
     request.pipe(destinationFile);
     response.writeHead(200, {'Content-Type': 'text/html'});
   	response.end("File Uploaded");
@@ -88,6 +88,6 @@ function fileDownload(request, response){
 	//response.writeHead(200, {'Content-Type': 'text/txt'});
 	//readStream.pipe(response);
     logger.info('File Download Starts');
-	response.sendfile("destination.txt");
+	response.sendfile("destination.pdf");
 	logger.info('File Download Ends');
 };
